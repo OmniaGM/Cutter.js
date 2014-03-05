@@ -40,6 +40,11 @@
          */
         this.oClasses = "more";
         /**
+         * ohref is the config singleton for href attr used in Cutter
+         */        
+        this.ohref = "";
+
+        /**
          * oTexts is the config singleton for texts used in Cutter
          * @member Cutter.prototype
          * @author Tomas Corral Casas
@@ -53,6 +58,7 @@
          * @type Number
          */
         this.nWords = 0;
+        this.nLines = 0;
         /**
          * nWordsCounter is the counter of words when finding them in code
          * @member Cutter.prototype
@@ -60,6 +66,7 @@
          * @type Number
          */
         this.nWordsCounter = 0;
+        this.nLinesCounter = 0;
         /**
          * oViewMore is a reference to the "see more" link.
          * @member Cutter.prototype
@@ -129,6 +136,7 @@
             return this;
         }
         this.oApplyTo = oApplyTo;
+        this.nLinesCounter = oApplyTo.children.length;
         this.oBackupApplyTo = oApplyTo.cloneNode(true);
         return this;
     };
@@ -162,6 +170,13 @@
         this.oClasses = oClasses;
         return this;
     };
+    Cutter.prototype.setURL = function (ohref) {
+        if (!ohref) {
+            return this;
+        }
+        this.ohref = ohref;
+        return this;
+    };
     /**
      * setText is the method that sets the text displayed in the "view more" link.
      * @member Cutter.prototype
@@ -192,6 +207,13 @@
         this.nWords = nWords - 1;
         return this;
     };
+    Cutter.prototype.setLines = function (nLines) {
+        if (!nLines) {
+            return this;
+        }
+        this.nLines = nLines
+        return this
+    }
     /**
      * trim is an utilities method used to keep out all the spaces before or after the sentence
      * @member Cutter.prototype
@@ -238,7 +260,8 @@
     Cutter.prototype.createViewMore = function () {
         var oLink = doc.createElement("a");
         oLink.className = this.oClasses;
-        oLink.title = this.oTexts;
+        oLink.href = this.ohref
+        // oLink.title = this.oTexts;
         oLink.innerHTML = this.oTexts;
         this.oViewMore = oLink;
     };
@@ -364,10 +387,13 @@
             nLastWordsCounter = 0,
             nChild = 0,
             nLenChilds = oDom.childNodes.length;
+
         if (this.bTest) {
             sId = "__" + (this.nIdTest += 1) + "__";
         }
+        
         if (this.nWordsCounter <= this.nWords) {
+            
             oSerialized = {};
             oSerialized.nodeType = oDom.nodeType;
             if (typeof oDom.tagName !== "undefined") {
@@ -398,6 +424,8 @@
                 }
 
                 if (this.nWordsCounter <= this.nWords) {
+                    
+
                     if (typeof oDom.textContent !== "undefined") {
                         oSerialized.textContent = oDom.textContent;
                     } else {
@@ -408,6 +436,7 @@
                         }
                     }
                 } else {
+                    
                     this.bNeedViewMore = true;
                     if (nLastWordsCounter < this.nWords && this.nWordsCounter > this.nWords) {
                         if (typeof oDom.textContent !== "undefined") {
@@ -442,7 +471,7 @@
             } else {
                 oSerializeObject[sId] = oSerialized;
             }
-        }
+        }    
     };
     Cutter.prototype.addEvent = function (oElement, sType, fpCallback) {
         if (oElement.addEventListener) {
@@ -459,11 +488,13 @@
      */
     Cutter.prototype.setBehaviour = function () {
         var self = this;
-        this.addEvent(this.oViewMore, "click", function (e) {
-                e.preventDefault();
-            self.showAll();
-            return false;
-        });
+        if (!(this.ohref.trim().length <= 0)) {
+            this.addEvent(this.oViewMore, "click", function (e) {
+                    e.preventDefault();
+                self.showAll();
+                return false;
+            });
+        }
     };
     /**
      * showAll is the method that put the initial content to the target Dom element
@@ -491,29 +522,39 @@
      * @author Tomas Corral Casas
      */
     Cutter.prototype.init = function () {
+        if (this.nLinesCounter > this.nLines) {
+            var children = $(this.oApplyTo).children().slice(0, this.nLines)
+            this.oApplyTo.innerHTML = "";
+            _.each(children, (function(_this) {
+              return function(child) {
+                return _this.oApplyTo.appendChild(child);
+              };
+            })(this));
+        }
         this.serializeDomObject(this.oApplyTo);
-        this.deserializeSerializedObject();
+        this.deserializeSerializedObject();   
         var oElement = this.oDocumentFragment.childNodes[0];
         oElement.removeChild(this.oDocumentFragment.childNodes[0].childNodes[0]);
-
         this.oTarget.innerHTML = "";
         this.createViewMore();
-
+        if (this.nLinesCounter > this.nLines) {
+            oElement.lastChild.appendChild(this.oViewMore);
+        }
         if (this.bNeedViewMore && !this.bNotViewMore) {
-            if (oElement.lastChild.nodeName == "P" ) {
-                oElement.lastChild.appendChild(doc.createTextNode("..."));
-            } else {
-                oElement.appendChild(doc.createTextNode("..."));
-            }
-            oElement.appendChild(doc.createElement("br"));
-            oElement.appendChild(this.oViewMore);
+            // if (oElement.lastChild.nodeName == "P" ) {
+            //     oElement.lastChild.appendChild(doc.createTextNode("..."));
+            // } else {
+            //     oElement.appendChild(doc.createTextNode("..."));
+            // }
+            // oElement.appendChild(doc.createElement("br"));
+            oElement.lastChild.appendChild(this.oViewMore);
             this.setBehaviour();
         }
         this.oTarget.appendChild(this.oDocumentFragment);
     };
-    Cutter.run = function (oApplyTo, oTarget, nWords, configuration) {
+    Cutter.run = function (oApplyTo, oTarget, nWords, nLines, configuration) {
     var oCutter = new Cutter();
-        oCutter.applyTo(oApplyTo).setTarget(oTarget).setWords(nWords);
+        oCutter.applyTo(oApplyTo).setTarget(oTarget).setWords(nWords).setLines(nLines);
 
         if (typeof configuration !== "undefined") {
             if (typeof configuration.viewMoreText !== "undefined") {
@@ -521,6 +562,9 @@
             }
             if (typeof configuration['class'] !== "undefined") {
                 oCutter.setClasses(configuration['class']);
+            }
+            if (typeof configuration['href'] !== "undefined") {
+                oCutter.setURL(configuration['href']);
             }
         }
 
