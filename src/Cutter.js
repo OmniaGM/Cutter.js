@@ -488,7 +488,7 @@
      */
     Cutter.prototype.setBehaviour = function () {
         var self = this;
-        if (!(this.ohref.trim().length <= 0)) {
+        if (this.ohref.trim().length <= 0) {
             this.addEvent(this.oViewMore, "click", function (e) {
                     e.preventDefault();
                 self.showAll();
