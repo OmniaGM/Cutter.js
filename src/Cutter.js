@@ -124,10 +124,10 @@
         this.bNotViewMore = false;
     };
     /**
+     * @param  {object} oApplyTo This is the Dom element
      * applyTo is the method that sets the Dom object where to apply the cutter
      * @member Cutter.prototype
      * @author Tomas Corral Casas
-     * @param  {object} oApplyTo This is the Dom element
      * @return the instance of the Cutter
      * @type Object
      */
@@ -144,10 +144,10 @@
     Cutter.prototype.avoidEmptyLines = function () {
         $(this.oApplyTo).children().each((function(_this) {
           return function(index, field) {
+            var _ref;
             if ((field.innerHTML === "<br>") || (field.tagName === "br")) {
                 $(_this.oApplyTo).find($(field)).remove();
                 }
-            var _ref;
             if (((_ref = field.textContent) != null ? _ref.trim().length : void 0) === 0) {
                 $(_this.oApplyTo).find($(field)).remove();
                 }
