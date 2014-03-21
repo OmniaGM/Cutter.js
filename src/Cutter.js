@@ -136,9 +136,23 @@
             return this;
         }
         this.oApplyTo = oApplyTo;
+        this.avoidEmptyLines()
         this.nLinesCounter = oApplyTo.children.length;
         this.oBackupApplyTo = oApplyTo.cloneNode(true);
         return this;
+    };
+    Cutter.prototype.avoidEmptyLines = function () {
+        $(this.oApplyTo).children().each((function(_this) {
+          return function(index, field) {
+            if ((field.innerHTML === "<br>") || (field.tagName === "br")) {
+                $(_this.oApplyTo).find($(field)).remove();
+                }
+            var _ref;
+            if (((_ref = field.textContent) != null ? _ref.trim().length : void 0) === 0) {
+                $(_this.oApplyTo).find($(field)).remove();
+                }
+            };
+        })(this));
     };
     /**
      * setTarget is the method that sets the Dom object where to put the cutted code
